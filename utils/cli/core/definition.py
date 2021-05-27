@@ -113,6 +113,12 @@ task_create_parser.add_argument(
     help='string or file containing JSON labels specification'
 )
 task_create_parser.add_argument(
+    '--project',
+    default=None,
+    type=int,
+    help='project ID if project exists'
+)
+task_create_parser.add_argument(
     '--overlap',
     default=0,
     type=int,
@@ -162,7 +168,33 @@ task_create_parser.add_argument(
     help='''number of seconds to wait until checking
             if data compression finished (necessary before uploading annotations)'''
 )
-
+task_create_parser.add_argument(
+    '--dataset_repository_url',
+    default='',
+    type=str,
+    help=('git repository to store annotations e.g.'
+          ' https://github.com/user/repos [annotation/<anno_file_name.zip>]')
+)
+task_create_parser.add_argument(
+    '--lfs',
+    default=False,
+    action='store_true',
+    help='using lfs for dataset repository (default: %(default)s)'
+)
+task_create_parser.add_argument(
+    '--image_quality',
+    default=70,
+    type=int,
+    help='''set the image quality option in the advanced configuration
+            when creating tasks.(default: %(default)s)'''
+)
+task_create_parser.add_argument(
+    '--frame_step',
+    default=1,
+    type=int,
+    help='''set the frame step option in the advanced configuration
+            when uploading image series or videos (default: %(default)s)'''
+)
 #######################################################################
 # Delete
 #######################################################################

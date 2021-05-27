@@ -1,17 +1,23 @@
-// Copyright (C) 2020 Intel Corporation
+// Copyright (C) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: MIT
 
 import React from 'react';
 import { connect } from 'react-redux';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { MenuInfo } from 'rc-menu/lib/interface';
 
 import ActionsMenuComponent, { Actions } from 'components/actions-menu/actions-menu';
 import { CombinedState } from 'reducers/interfaces';
 
 import { modelsActions } from 'actions/models-actions';
-import { dumpAnnotationsAsync, loadAnnotationsAsync, exportDatasetAsync, deleteTaskAsync } from 'actions/tasks-actions';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { MenuInfo } from 'rc-menu/lib/interface';
+import {
+    dumpAnnotationsAsync,
+    loadAnnotationsAsync,
+    exportDatasetAsync,
+    deleteTaskAsync,
+    switchMoveTaskModalVisible,
+} from 'actions/tasks-actions';
 
 interface OwnProps {
     taskInstance: any;
@@ -31,6 +37,7 @@ interface DispatchToProps {
     exportDataset: (taskInstance: any, exporter: any) => void;
     deleteTask: (taskInstance: any) => void;
     openRunModelWindow: (taskInstance: any) => void;
+    openMoveTaskToProjectWindow: (taskInstance: any) => void;
 }
 
 function mapStateToProps(state: CombinedState, own: OwnProps): StateToProps {
@@ -71,6 +78,9 @@ function mapDispatchToProps(dispatch: any): DispatchToProps {
         openRunModelWindow: (taskInstance: any): void => {
             dispatch(modelsActions.showRunModelDialog(taskInstance));
         },
+        openMoveTaskToProjectWindow: (taskId: number): void => {
+            dispatch(switchMoveTaskModalVisible(true, taskId));
+        },
     };
 }
 
@@ -88,6 +98,7 @@ function ActionsMenuContainer(props: OwnProps & StateToProps & DispatchToProps):
         exportDataset,
         deleteTask,
         openRunModelWindow,
+        openMoveTaskToProjectWindow,
     } = props;
 
     function onClickMenu(params: MenuInfo, file?: File): void {
@@ -117,10 +128,11 @@ function ActionsMenuContainer(props: OwnProps & StateToProps & DispatchToProps):
             if (action === Actions.DELETE_TASK) {
                 deleteTask(taskInstance);
             } else if (action === Actions.OPEN_BUG_TRACKER) {
-                // eslint-disable-next-line
                 window.open(`${taskInstance.bugTracker}`, '_blank');
             } else if (action === Actions.RUN_AUTO_ANNOTATION) {
                 openRunModelWindow(taskInstance);
+            } else if (action === Actions.MOVE_TASK_TO_PROJECT) {
+                openMoveTaskToProjectWindow(taskInstance.id);
             }
         }
     }
@@ -137,6 +149,7 @@ function ActionsMenuContainer(props: OwnProps & StateToProps & DispatchToProps):
             exportActivities={exportActivities}
             inferenceIsActive={inferenceIsActive}
             onClickMenu={onClickMenu}
+            taskDimension={taskInstance.dimension}
         />
     );
 }

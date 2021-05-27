@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Intel Corporation
+// Copyright (C) 2020-2021 Intel Corporation
 //
 // SPDX-License-Identifier: MIT
 
@@ -45,6 +45,7 @@ const defaultState: NotificationsState = {
             exporting: null,
             deleting: null,
             creating: null,
+            moving: null,
         },
         formats: {
             fetching: null,
@@ -69,6 +70,7 @@ const defaultState: NotificationsState = {
             saving: null,
             jobFetching: null,
             frameFetching: null,
+            contextImageFetching: null,
             changingLabelColor: null,
             updating: null,
             creating: null,
@@ -102,10 +104,14 @@ const defaultState: NotificationsState = {
             resolvingIssue: null,
             submittingReview: null,
         },
+        predictor: {
+            prediction: null,
+        },
     },
     messages: {
         tasks: {
             loadingDone: '',
+            movingDone: '',
         },
         models: {
             inferenceDone: '',
@@ -146,6 +152,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         login: {
                             message: 'Could not login on the server',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-login-failed',
                         },
                     },
                 },
@@ -222,6 +229,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         changePassword: {
                             message: 'Could not change password',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-change-password-failed',
                         },
                     },
                 },
@@ -343,6 +351,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                                 'Could not upload annotation for the ' +
                                 `<a href="/tasks/${taskID}" target="_blank">task ${taskID}</a>`,
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-load-annotation-failed',
                         },
                     },
                 },
@@ -373,6 +382,25 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         ...state.errors.tasks,
                         updating: {
                             message: `Could not update <a href="/tasks/${taskID}" target="_blank">task ${taskID}</a>`,
+                            reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-update-task-failed',
+                        },
+                    },
+                },
+            };
+        }
+        case TasksActionTypes.MOVE_TASK_TO_PROJECT_FAILED: {
+            const taskID = action.payload.task.id;
+            return {
+                ...state,
+                errors: {
+                    ...state.errors,
+                    tasks: {
+                        ...state.errors.tasks,
+                        moving: {
+                            message:
+                                'Could not move  the' +
+                                `<a href="/tasks/${taskID}" target="_blank">task ${taskID}</a> to a project`,
                             reason: action.payload.error.toString(),
                         },
                     },
@@ -410,6 +438,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                                 'Could not delete the ' +
                                 `<a href="/tasks/${taskID}" target="_blank">task ${taskID}</a>`,
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-delete-task-failed',
                         },
                     },
                 },
@@ -425,7 +454,22 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         creating: {
                             message: 'Could not create the task',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-create-task-failed',
                         },
+                    },
+                },
+            };
+        }
+        case TasksActionTypes.MOVE_TASK_TO_PROJECT_SUCCESS: {
+            const { id: taskId, projectId } = action.payload.task;
+
+            return {
+                ...state,
+                messages: {
+                    ...state.messages,
+                    tasks: {
+                        ...state.messages.tasks,
+                        movingDone: `The task #${taskId} has been successfully moved to the project #${projectId}`,
                     },
                 },
             };
@@ -455,6 +499,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         creating: {
                             message: 'Could not create the project',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-create-project-failed',
                         },
                     },
                 },
@@ -473,6 +518,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                                 'Could not update ' +
                                 `<a href="/project/${projectId}" target="_blank">project ${projectId}</a>`,
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-update-project-failed',
                         },
                     },
                 },
@@ -491,6 +537,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                                 'Could not delete ' +
                                 `<a href="/project/${projectId}" target="_blank">project ${projectId}</a>`,
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-delete-project-failed',
                         },
                     },
                 },
@@ -656,6 +703,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         jobFetching: {
                             message: 'Error during fetching a job',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-fetch-job-failed',
                         },
                     },
                 },
@@ -676,6 +724,21 @@ export default function (state = defaultState, action: AnyAction): Notifications
                 },
             };
         }
+        case AnnotationActionTypes.GET_CONTEXT_IMAGE_FAILED: {
+            return {
+                ...state,
+                errors: {
+                    ...state.errors,
+                    annotation: {
+                        ...state.errors.annotation,
+                        contextImageFetching: {
+                            message: 'Could not fetch context image from the server',
+                            reason: action.payload.error,
+                        },
+                    },
+                },
+            };
+        }
         case AnnotationActionTypes.SAVE_ANNOTATIONS_FAILED: {
             return {
                 ...state,
@@ -686,6 +749,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         saving: {
                             message: 'Could not save annotations',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-save-annotations-failed',
                         },
                     },
                 },
@@ -701,6 +765,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         updating: {
                             message: 'Could not update annotations',
                             reason: action.payload.error.toString(),
+                            className: 'cvat-notification-notice-update-annotations-failed',
                         },
                     },
                 },
@@ -831,6 +896,7 @@ export default function (state = defaultState, action: AnyAction): Notifications
                                 'Could not upload annotations for the ' +
                                 `<a href="/tasks/${taskID}/jobs/${jobID}" target="_blank">job ${taskID}</a>`,
                             reason: error.toString(),
+                            className: 'cvat-notification-notice-upload-annotations-fail',
                         },
                     },
                 },
@@ -1086,6 +1152,21 @@ export default function (state = defaultState, action: AnyAction): Notifications
                         ...state.errors.annotation,
                         jobFetching: {
                             message: 'Could not fetch frame data from the server',
+                            reason: action.payload.error,
+                        },
+                    },
+                },
+            };
+        }
+        case AnnotationActionTypes.GET_PREDICTIONS_FAILED: {
+            return {
+                ...state,
+                errors: {
+                    ...state.errors,
+                    predictor: {
+                        ...state.errors.predictor,
+                        prediction: {
+                            message: 'Could not fetch prediction data',
                             reason: action.payload.error,
                         },
                     },
